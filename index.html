@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Portafolio Lean - AGILITY CHANGES</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -25,9 +24,6 @@
         }
         .shadow-2xl {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        .border-dashed {
-            border-style: dashed;
         }
         .cursor-not-allowed {
             cursor: not-allowed;
@@ -514,6 +510,8 @@
                     state.initiatives.forEach((item, idx) => {
                         item.priority = idx + 1;
                     });
+                    
+                    render();
                 }
             }
         }
@@ -523,6 +521,7 @@
             
             if (initiative && initiative.status === 'backlog') {
                 initiative.teamType = newTeamType;
+                render();
             }
         }
 
@@ -790,6 +789,32 @@
             }
         }
 
+        function getAlignmentExplanation(alignment) {
+            switch (alignment) {
+                case 'Crítico': return 'Impacto directo en objetivos corporativos - Máxima prioridad';
+                case 'Alto': return 'Importante para competitividad - Alta prioridad';
+                case 'Medio': return 'Mejora operacional - Prioridad media';
+                case 'Bajo': return 'Optimización menor - Baja prioridad';
+                default: return 'Nivel de importancia no definido';
+            }
+        }
+
+        function getComplexityExplanation(complexity) {
+            switch (complexity) {
+                case 'Alta': return 'Requiere 30% más tiempo, mayor riesgo técnico, arquitectura compleja';
+                case 'Baja': return 'Desarrollo estándar, riesgo controlado, solución conocida';
+                default: return 'Nivel de complejidad no definido';
+            }
+        }
+
+        function getTeamTypeExplanation(teamType) {
+            switch (teamType) {
+                case 'dedicated': return 'Equipo exclusivo - 100% disponible, mayor velocidad, mayor costo';
+                case 'shared': return 'Equipo multi-proyecto - 60% disponible, menor velocidad, menor costo';
+                default: return 'Tipo de equipo no definido';
+            }
+        }
+
         // Función principal de render
         function render() {
             const costs = calculateCosts();
@@ -847,7 +872,7 @@
                     </div>
                 </div>
 
-                <!-- Instrucciones -->
+                <!-- Instrucciones COMPLETAS -->
                 ${state.showInstructions ? `
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
                     <div class="flex items-center justify-between mb-4">
@@ -861,30 +886,77 @@
                     </div>
                     
                     <div class="bg-white p-4 rounded-lg border border-yellow-200 mb-4">
-                        <h4 class="font-bold text-yellow-900 mb-3">🎯 CÓMO USAR EL SIMULADOR:</h4>
+                        <h4 class="font-bold text-yellow-900 mb-3">🎯 CÓMO USAR EL SIMULADOR (Sigue estos pasos exactamente):</h4>
                         <div class="space-y-4 text-sm text-yellow-800">
+                            
                             <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
-                                <strong>PASO 1: CONFIGURAR TU EQUIPO</strong>
+                                <strong class="text-yellow-900">PASO 1: CONFIGURAR TU EQUIPO</strong>
                                 <ul class="mt-2 ml-4 space-y-1">
-                                    <li>• Ajusta el tamaño del equipo, horas por semana y límite de WIP</li>
-                                    <li>• Observa las alertas de burnout y WIP alto</li>
+                                    <li>• Ajusta el <strong>tamaño del equipo</strong> (deslizador: 1-12 personas)</li>
+                                    <li>• Define las <strong>horas por semana</strong> (deslizador: 30-60 horas)</li>
+                                    <li>• Establece el <strong>límite de WIP</strong> (deslizador: 1-10 iniciativas simultáneas)</li>
+                                    <li>• ⚠️ <strong>Observa las alertas:</strong> te dicen si hay riesgo de burnout o WIP alto</li>
                                 </ul>
                             </div>
+
                             <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
-                                <strong>PASO 2: PRIORIZAR INICIATIVAS</strong>
+                                <strong class="text-yellow-900">PASO 2: PRIORIZAR INICIATIVAS</strong>
                                 <ul class="mt-2 ml-4 space-y-1">
-                                    <li>• Usa las flechas ↑↓ para reordenar por valor estratégico</li>
-                                    <li>• Cambia el tipo de equipo (Dedicado vs Compartido)</li>
+                                    <li>• Usa las <strong>flechas ↑↓</strong> para mover iniciativas hacia arriba o abajo</li>
+                                    <li>• Ordena por <strong>valor estratégico:</strong> Crítico → Alto → Medio → Bajo</li>
+                                    <li>• Considera la <strong>complejidad técnica:</strong> proyectos "Alta" toman 30% más tiempo</li>
+                                    <li>• Cambia el <strong>tipo de equipo</strong> (menú desplegable): Dedicado (más rápido, más caro) vs Compartido (más lento, más barato)</li>
                                 </ul>
                             </div>
+
                             <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
-                                <strong>PASO 3: EJECUTAR Y CONTINUAR</strong>
+                                <strong class="text-yellow-900">PASO 3: EJECUTAR EL MES</strong>
                                 <ul class="mt-2 ml-4 space-y-1">
-                                    <li>• Haz clic en "EJECUTAR MES" y revisa resultados</li>
-                                    <li>• Continúa al siguiente mes y ajusta estrategia</li>
+                                    <li>• Haz clic en <strong>"EJECUTAR MES"</strong> (botón amarillo grande)</li>
+                                    <li>• ⚠️ <strong>Si está deshabilitado:</strong> significa que excediste el presupuesto de $50,000</li>
+                                    <li>• Espera a que termine la simulación (verás una animación de carga)</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong class="text-yellow-900">PASO 4: REVISAR RESULTADOS</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• Revisa el <strong>valor entregado</strong> este mes</li>
+                                    <li>• Observa cuántas <strong>iniciativas se completaron</strong></li>
+                                    <li>• Analiza la <strong>eficiencia del equipo</strong> y el <strong>presupuesto usado</strong></li>
+                                    <li>• Lee las <strong>advertencias del evento</strong> que ocurrió este mes</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong class="text-yellow-900">PASO 5: CONTINUAR AL SIGUIENTE MES</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• Haz clic en <strong>"SIGUIENTE MES →"</strong></li>
+                                    <li>• Observa el <strong>estado de salud del equipo</strong> (burnout, satisfacción, rotación)</li>
+                                    <li>• <strong>Ajusta tu estrategia</strong> basándote en los resultados</li>
+                                    <li>• Repite desde el PASO 1 para el siguiente mes</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong class="text-yellow-900">PASO 6: COMPLETAR LA SIMULACIÓN</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• <strong>Objetivo:</strong> Entregar al menos 410 puntos de valor en 6 meses</li>
+                                    <li>• Al finalizar, haz clic en <strong>"📊 VER MI RESUMEN PROFESIONAL"</strong></li>
+                                    <li>• Obtendrás un <strong>análisis detallado</strong> de tu desempeño y recomendaciones</li>
                                 </ul>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="bg-amber-100 p-4 rounded-lg border border-amber-200">
+                        <h4 class="font-bold text-amber-900 mb-2">💡 CONSEJOS CLAVE:</h4>
+                        <ul class="text-sm text-amber-800 space-y-1">
+                            <li>• <strong>WIP alto</strong> reduce drásticamente la eficiencia</li>
+                            <li>• <strong>Horas extra</strong> generan burnout y afectan la productividad futura</li>
+                            <li>• <strong>Eventos aleatorios</strong> requieren adaptabilidad constante</li>
+                            <li>• <strong>Prioriza por valor estratégico</strong> más que por facilidad</li>
+                        </ul>
                     </div>
                 </div>
                 ` : ''}
@@ -940,6 +1012,15 @@
                         <h2 class="text-xl font-semibold text-gray-900">Configuración del Equipo</h2>
                     </div>
 
+                    <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                        <h3 class="font-medium text-blue-900 mb-2">💡 CONFIGURACIÓN ESTRATÉGICA:</h3>
+                        <p class="text-sm text-blue-800">
+                            <strong>Principios Lean:</strong> Más horas ≠ más valor. La sobrecarga genera burnout y reduce sostenibilidad. 
+                            WIP alto causa context switching. Equipos dedicados son más rápidos pero costosos. 
+                            <strong>Encuentra el equilibrio óptimo.</strong>
+                        </p>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="space-y-3">
                             <label class="block text-sm font-medium text-gray-700">
@@ -948,7 +1029,7 @@
                             <input type="range" min="1" max="12" value="${state.teamSize}" 
                                    onchange="updateTeamSize(this.value)" class="w-full" ${state.isExecuting ? 'disabled' : ''}>
                             <div class="text-xs text-gray-500">
-                                Más personas = mayor capacidad pero mayor costo
+                                Más personas = mayor capacidad pero mayor costo y coordinación
                             </div>
                         </div>
 
@@ -1014,11 +1095,49 @@
                     </div>
                 </div>
 
-                <!-- Priorización de Iniciativas -->
+                <!-- Priorización de Iniciativas COMPLETA -->
                 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                     <div class="flex items-center mb-4">
                         <span class="text-gray-600 mr-2">🎯</span>
                         <h2 class="text-xl font-semibold text-gray-900">Priorización de Iniciativas</h2>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-lg mb-4">
+                        <h3 class="font-medium text-green-900 mb-3">🎯 GUÍA DE PRIORIZACIÓN ESTRATÉGICA</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-green-800">
+                            <div class="bg-white p-3 rounded border border-green-200">
+                                <h4 class="font-bold text-green-900 mb-2">📊 ALINEACIÓN ESTRATÉGICA</h4>
+                                <p class="mb-2">Qué tan importante es la iniciativa para los objetivos organizacionales:</p>
+                                <ul class="text-xs space-y-1">
+                                    <li><strong>• Crítico:</strong> Impacto directo en objetivos corporativos</li>
+                                    <li><strong>• Alto:</strong> Importante para competitividad</li>
+                                    <li><strong>• Medio:</strong> Mejora operacional</li>
+                                    <li><strong>• Bajo:</strong> Optimización menor</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-green-200">
+                                <h4 class="font-bold text-green-900 mb-2">🔧 COMPLEJIDAD TÉCNICA</h4>
+                                <p class="mb-2">Nivel de dificultad técnica y riesgo de desarrollo:</p>
+                                <ul class="text-xs space-y-1">
+                                    <li><strong>• Alta:</strong> Requiere 30% más tiempo, mayor riesgo, arquitectura compleja</li>
+                                    <li><strong>• Baja:</strong> Desarrollo estándar, riesgo controlado, solución conocida</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-3 rounded border border-green-200">
+                                <h4 class="font-bold text-green-900 mb-2">👥 TIPO DE EQUIPO</h4>
+                                <p class="mb-2">Modelo de asignación de recursos:</p>
+                                <ul class="text-xs space-y-1">
+                                    <li><strong>• Dedicado:</strong> Equipo exclusivo, 100% disponible, mayor costo</li>
+                                    <li><strong>• Compartido:</strong> Equipo multi-proyecto, 60% disponible, menor costo</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-green-100 rounded border border-green-300">
+                            <p class="text-sm text-green-900">
+                                <strong>💡 Estrategia Lean:</strong> Prioriza por valor/esfuerzo considerando alineación estratégica, 
+                                complejidad técnica y disponibilidad de recursos. Iniciativas críticas de baja complejidad suelen ser ideales.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="space-y-3">
@@ -1046,16 +1165,52 @@
                                             <div class="flex items-center space-x-2 mb-2">
                                                 <h3 class="font-medium text-lg">${initiative.name}</h3>
                                                 <span class="px-2 py-1 rounded text-xs font-medium ${getAlignmentColor(initiative.strategicAlignment)}">
-                                                    ${initiative.strategicAlignment}
+                                                    Alineación: ${initiative.strategicAlignment}
                                                 </span>
                                                 <span class="px-2 py-1 rounded text-xs font-medium ${getComplexityColor(initiative.complexity)}">
-                                                    ${initiative.complexity}
+                                                    Complejidad: ${initiative.complexity}
                                                 </span>
                                                 ${initiative.hasIssues ? `
                                                     <span class="px-2 py-1 rounded text-xs bg-red-100 text-red-700 font-medium">
                                                         🐛 Afectada
                                                     </span>
                                                 ` : ''}
+                                                <span class="px-2 py-1 rounded text-xs font-medium ${
+                                                    initiative.status === 'backlog' ? 'bg-gray-100 text-gray-700' : 
+                                                    initiative.status === 'in-progress' ? 'bg-blue-100 text-blue-700' : 
+                                                    'bg-green-100 text-green-700'
+                                                }">
+                                                    ${initiative.status === 'backlog' ? 'En espera' : 
+                                                      initiative.status === 'in-progress' ? 'En progreso' : 'Completada'}
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Explicaciones detalladas -->
+                                            <div class="mb-3 p-3 bg-gray-50 rounded-lg">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                                    <div class="p-2 bg-white rounded border border-gray-200">
+                                                        <strong class="text-gray-800 flex items-center">
+                                                            🎯 Alineación Estratégica: 
+                                                            <span class="ml-2 px-2 py-1 rounded text-xs ${getAlignmentColor(initiative.strategicAlignment)}">
+                                                                ${initiative.strategicAlignment}
+                                                            </span>
+                                                        </strong>
+                                                        <div class="text-gray-600 mt-1">
+                                                            <strong>Significado:</strong> ${getAlignmentExplanation(initiative.strategicAlignment)}
+                                                        </div>
+                                                    </div>
+                                                    <div class="p-2 bg-white rounded border border-gray-200">
+                                                        <strong class="text-gray-800 flex items-center">
+                                                            🔧 Complejidad Técnica: 
+                                                            <span class="ml-2 px-2 py-1 rounded text-xs ${getComplexityColor(initiative.complexity)}">
+                                                                ${initiative.complexity}
+                                                            </span>
+                                                        </strong>
+                                                        <div class="text-gray-600 mt-1">
+                                                            <strong>Impacto:</strong> ${getComplexityExplanation(initiative.complexity)}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             
                                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
@@ -1076,16 +1231,32 @@
                                                 </div>
                                                 <div>
                                                     ${initiative.status === 'backlog' ? `
-                                                        <select onchange="changeInitiativeTeamType(${initiative.id}, this.value)" 
-                                                                ${state.isExecuting ? 'disabled' : ''} class="text-xs border rounded px-2 py-1">
-                                                            <option value="dedicated" ${initiative.teamType === 'dedicated' ? 'selected' : ''}>Dedicado</option>
-                                                            <option value="shared" ${initiative.teamType === 'shared' ? 'selected' : ''}>Compartido</option>
-                                                        </select>
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="text-gray-600 text-xs">Equipo:</span>
+                                                            <select onchange="changeInitiativeTeamType(${initiative.id}, this.value)" 
+                                                                    ${state.isExecuting ? 'disabled' : ''} 
+                                                                    class="text-xs border rounded px-2 py-1">
+                                                                <option value="dedicated" ${initiative.teamType === 'dedicated' ? 'selected' : ''}>Dedicado</option>
+                                                                <option value="shared" ${initiative.teamType === 'shared' ? 'selected' : ''}>Compartido</option>
+                                                            </select>
+                                                        </div>
                                                     ` : `
                                                         <span class="px-2 py-1 rounded text-xs font-medium ${getTeamTypeColor(initiative.teamType)}">
                                                             ${getTeamTypeLabel(initiative.teamType)}
                                                         </span>
                                                     `}
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                                <div class="flex items-center">
+                                                    <strong class="text-blue-800">👥 Tipo de Equipo:</strong>
+                                                    <span class="ml-2 px-2 py-1 rounded text-xs ${getTeamTypeColor(initiative.teamType)}">
+                                                        ${getTeamTypeLabel(initiative.teamType)}
+                                                    </span>
+                                                </div>
+                                                <div class="text-blue-700 mt-1">
+                                                    <strong>Implicaciones:</strong> ${getTeamTypeExplanation(initiative.teamType)}
                                                 </div>
                                             </div>
                                             
@@ -1112,7 +1283,7 @@
                                     : 'bg-amber-500 hover:bg-amber-600'
                             } transition-colors shadow-lg">
                         ${state.isExecuting ? `
-                            <div class="flex items-center">
+                            <div class="flex items-center justify-center">
                                 <div class="animate-spin mr-3 h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
                                 Ejecutando Mes ${state.currentMonth}...
                             </div>
@@ -1121,9 +1292,20 @@
                         ` : costs.totalCost > monthlyBudget ? `
                             ❌ PRESUPUESTO EXCEDIDO
                         ` : `
-                            ▶️ EJECUTAR MES ${state.currentMonth}
+                            <div class="flex items-center justify-center">
+                                <span class="mr-3">▶️</span>
+                                EJECUTAR MES ${state.currentMonth}
+                            </div>
                         `}
                     </button>
+                    
+                    <div class="mt-3 text-sm text-gray-600">
+                        ${state.monthExecuted ? `
+                            Mes completado. Haz clic en 'Siguiente Mes' para continuar.
+                        ` : !state.isExecuting && costs.totalCost <= monthlyBudget ? `
+                            Configura tu equipo, prioriza iniciativas y ejecuta el mes
+                        ` : ''}
+                    </div>
                 </div>
 
                 <!-- Resultados -->
@@ -1224,6 +1406,88 @@
                                     `).join('')}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Sección Educativa - Solo conceptos implementados -->
+                ${(state.monthlyHistory.length > 0 || state.showResults) && (state.currentMonth <= state.targetMonths && state.totalValueDelivered < state.targetValue) ? `
+                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg shadow-md p-6 mb-6 border border-amber-200">
+                        <div class="flex items-center mb-6">
+                            <span class="text-amber-600 mr-2">ℹ️</span>
+                            <h2 class="text-2xl font-bold text-amber-900">Conceptos Lean en Acción</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Flujo y Priorización -->
+                            <div class="bg-white p-6 rounded-lg border border-amber-100">
+                                <h3 class="font-bold text-amber-900 mb-4 text-lg">🎯 Flujo de Valor</h3>
+                                <div class="space-y-3 text-sm text-gray-700">
+                                    <div class="p-3 bg-amber-50 rounded border border-amber-100">
+                                        <strong class="text-amber-800">• Flujo de Valor:</strong> Las iniciativas fluyen desde el backlog → en progreso → completadas. Optimiza este flujo, no la ocupación del equipo.
+                                    </div>
+                                    <div class="p-3 bg-amber-50 rounded border border-amber-100">
+                                        <strong class="text-amber-800">• Limitación de WIP:</strong> Tu límite de WIP controla cuántas iniciativas trabajas simultáneamente. WIP alto = context switching = menos eficiencia.
+                                    </div>
+                                    <div class="p-3 bg-amber-50 rounded border border-amber-100">
+                                        <strong class="text-amber-800">• Priorización por Valor:</strong> Reordena iniciativas por alineación estratégica (Crítico > Alto > Medio > Bajo) y complejidad técnica.
+                                    </div>
+                                    <div class="p-3 bg-amber-50 rounded border border-amber-100">
+                                        <strong class="text-amber-800">• Throughput:</strong> Valor de negocio entregado por mes. Más importante que velocidad individual de tareas.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gestión de Recursos -->
+                            <div class="bg-white p-6 rounded-lg border border-amber-100">
+                                <h3 class="font-bold text-orange-900 mb-4 text-lg">📊 Gestión de Recursos</h3>
+                                <div class="space-y-3 text-sm text-gray-700">
+                                    <div class="p-3 bg-orange-50 rounded border border-orange-100">
+                                        <strong class="text-orange-800">• Capacity Allocation:</strong> Equipos dedicados (100% disponibles, más caros) vs compartidos (60% disponibles, más baratos).
+                                    </div>
+                                    <div class="p-3 bg-orange-50 rounded border border-orange-100">
+                                        <strong class="text-orange-800">• Alineación Estratégica:</strong> Crítico = objetivos corporativos, Alto = competitividad, Medio = mejora operacional, Bajo = optimización.
+                                    </div>
+                                    <div class="p-3 bg-orange-50 rounded border border-orange-100">
+                                        <strong class="text-orange-800">• Complejidad Técnica:</strong> Alta = +30% tiempo y más riesgo. Baja = desarrollo estándar y riesgo controlado.
+                                    </div>
+                                    <div class="p-3 bg-orange-50 rounded border border-orange-100">
+                                        <strong class="text-orange-800">• Sostenibilidad:</strong> Burnout, satisfacción y rotación afectan la productividad futura. Horas extra tienen consecuencias.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Adaptabilidad -->
+                            <div class="bg-white p-6 rounded-lg border border-amber-100">
+                                <h3 class="font-bold text-blue-900 mb-4 text-lg">🔄 Adaptabilidad</h3>
+                                <div class="space-y-3 text-sm text-gray-700">
+                                    <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                                        <strong class="text-blue-800">• Eventos Aleatorios:</strong> Cambios de requerimientos, bugs críticos, oportunidades de mercado, y meses excepcionales ocurren impredeciblemente.
+                                    </div>
+                                    <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                                        <strong class="text-blue-800">• Respuesta al Cambio:</strong> Tu capacidad de adaptación determina qué tan bien manejas eventos disruptivos.
+                                    </div>
+                                    <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                                        <strong class="text-blue-800">• Transparencia:</strong> El historial completo te permite ver patrones y aprender de decisiones pasadas.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Métricas Clave -->
+                            <div class="bg-white p-6 rounded-lg border border-amber-100">
+                                <h3 class="font-bold text-green-900 mb-4 text-lg">📈 Métricas Clave</h3>
+                                <div class="space-y-3 text-sm text-gray-700">
+                                    <div class="p-3 bg-green-50 rounded border border-green-100">
+                                        <strong class="text-green-800">• Valor Entregado:</strong> Medida más importante. Prioriza completar iniciativas de alto valor estratégico.
+                                    </div>
+                                    <div class="p-3 bg-green-50 rounded border border-green-100">
+                                        <strong class="text-green-800">• Eficiencia del Equipo:</strong> Porcentaje de capacidad utilizada efectivamente. Impactada por WIP, burnout y eventos.
+                                    </div>
+                                    <div class="p-3 bg-green-50 rounded border border-green-100">
+                                        <strong class="text-green-800">• Presupuesto:</strong> Límite estricto de $50,000/mes. Más equipo = más costo. Horas extra = costo adicional.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ` : ''}
