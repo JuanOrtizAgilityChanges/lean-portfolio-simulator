@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Portafolio Lean - AGILITY CHANGES</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .shadow-2xl {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .border-dashed {
+            border-style: dashed;
+        }
+        .cursor-not-allowed {
+            cursor: not-allowed;
+        }
+        .overflow-y-auto {
+            overflow-y: auto;
+        }
+        .max-h-screen {
+            max-height: 90vh;
+        }
+        .z-50 {
+            z-index: 50;
+        }
+        .fixed {
+            position: fixed;
+        }
+        .inset-0 {
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+        .bg-opacity-50 {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .sticky {
+            position: sticky;
+        }
+        .top-0 {
+            top: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" class="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+        <!-- Loading will be replaced by the simulator -->
+        <div class="text-center py-20">
+            <div class="text-4xl font-black text-amber-500 mb-4">AGILITY CHANGES</div>
+            <div class="text-lg text-gray-600">Cargando Simulador...</div>
+        </div>
+    </div>
+
+    <script>
+        // Estado global de la aplicación
+        let state = {
+            currentMonth: 1,
+            isExecuting: false,
+            showResults: false,
+            showInstructions: true,
+            showProfessionalSummary: false,
+            monthExecuted: false,
+            
+            // Configuración del equipo
+            teamSize: 5,
+            hoursPerPersonPerWeek: 40,
+            wipLimit: 2,
+            previousTeamSize: 5,
+            
+            // Objetivo del juego
+            targetValue: 410,
+            targetMonths: 6,
+            
+            // Estado del equipo
+            teamHealth: {
+                burnoutLevel: 0,
+                satisfaction: 100,
+                turnover: 0,
+                productivity: 100
+            },
+            
+            // Eventos aleatorios y variabilidad
+            currentEvent: null,
+            monthlyVariability: 1,
+            
+            // Iniciativas iniciales
+            initiatives: [
+                {
+                    id: 1,
+                    name: 'Plataforma E-commerce',
+                    businessValue: 120,
+                    effortWeeks: 14,
+                    originalEffort: 14,
+                    strategicAlignment: 'Crítico',
+                    complexity: 'Alta',
+                    teamType: 'dedicated',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 1,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                },
+                {
+                    id: 2,
+                    name: 'App Mobile',
+                    businessValue: 90,
+                    effortWeeks: 10,
+                    originalEffort: 10,
+                    strategicAlignment: 'Alto',
+                    complexity: 'Baja',
+                    teamType: 'shared',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 2,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                },
+                {
+                    id: 3,
+                    name: 'Sistema CRM',
+                    businessValue: 75,
+                    effortWeeks: 12,
+                    originalEffort: 12,
+                    strategicAlignment: 'Medio',
+                    complexity: 'Alta',
+                    teamType: 'shared',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 3,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                },
+                {
+                    id: 4,
+                    name: 'Automatización QA',
+                    businessValue: 60,
+                    effortWeeks: 8,
+                    originalEffort: 8,
+                    strategicAlignment: 'Medio',
+                    complexity: 'Baja',
+                    teamType: 'dedicated',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 4,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                },
+                {
+                    id: 5,
+                    name: 'Refactoring Backend',
+                    businessValue: 45,
+                    effortWeeks: 6,
+                    originalEffort: 6,
+                    strategicAlignment: 'Bajo',
+                    complexity: 'Baja',
+                    teamType: 'shared',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 5,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                },
+                {
+                    id: 6,
+                    name: 'Analytics Dashboard',
+                    businessValue: 65,
+                    effortWeeks: 9,
+                    originalEffort: 9,
+                    strategicAlignment: 'Alto',
+                    complexity: 'Alta',
+                    teamType: 'dedicated',
+                    status: 'backlog',
+                    progress: 0,
+                    priority: 6,
+                    blockedWeeks: 0,
+                    hasIssues: false
+                }
+            ],
+            
+            // Métricas y resultados
+            monthlyResults: {
+                valueDelivered: 0,
+                projectsCompleted: 0,
+                teamEfficiency: 0,
+                budgetUsed: 0,
+                warnings: [],
+                event: null
+            },
+            
+            monthlyHistory: [],
+            totalValueDelivered: 0
+        };
+
+        // Constantes
+        const monthlyBudget = 50000;
+        const baseSalaryPerPerson = 8000;
+        const overtimeCostPerHour = 50;
+        const hiringCost = 5000;
+
+        // Eventos aleatorios posibles
+        const possibleEvents = [
+            {
+                id: 'requirement_change',
+                name: 'Cambio de Requerimientos',
+                description: 'Los stakeholders cambiaron los requerimientos. Una iniciativa requiere 40% más esfuerzo.',
+                icon: '🔄',
+                effect: 'effort_increase',
+                severity: 'high'
+            },
+            {
+                id: 'critical_bug',
+                name: 'Bug Crítico',
+                description: 'Se descubrió un bug crítico en producción. Productividad reducida 40% este mes.',
+                icon: '🐛',
+                effect: 'productivity_reduce',
+                severity: 'high'
+            },
+            {
+                id: 'market_opportunity',
+                name: 'Oportunidad de Mercado Urgente',
+                description: 'Nueva oportunidad crítica del mercado. Se agrega una iniciativa de alto valor.',
+                icon: '💡',
+                effect: 'new_initiative',
+                severity: 'medium'
+            },
+            {
+                id: 'good_month',
+                name: 'Mes Excepcionalmente Productivo',
+                description: 'Todo sale perfectamente. Productividad aumentada 25% este mes.',
+                icon: '🚀',
+                effect: 'productivity_boost',
+                severity: 'positive'
+            }
+        ];
+
+        // Funciones de utilidad
+        function calculateCosts() {
+            const baseCost = state.teamSize * baseSalaryPerPerson;
+            const overtimeHours = Math.max(0, state.hoursPerPersonPerWeek - 40);
+            const overtimeCost = state.teamSize * overtimeHours * 4 * overtimeCostPerHour;
+            const hiringCostThisMonth = state.teamSize > state.previousTeamSize ? 
+                (state.teamSize - state.previousTeamSize) * hiringCost : 0;
+            const totalCost = baseCost + overtimeCost + hiringCostThisMonth;
+            
+            return {
+                baseCost,
+                overtimeCost,
+                hiringCost: hiringCostThisMonth,
+                totalCost
+            };
+        }
+
+        function calculateMultiProjectPenalty(activeProjects) {
+            if (activeProjects <= 1) return 1.0;
+            
+            const basePenalty = activeProjects === 2 ? 0.85 : 
+                               activeProjects === 3 ? 0.70 : 0.60;
+            
+            const randomVariation = 0.9 + (Math.random() * 0.2);
+            return Math.max(0.4, basePenalty * randomVariation);
+        }
+
+        function getInitiativeTeamFactor(teamType) {
+            switch (teamType) {
+                case 'dedicated':
+                    return { availability: 1.0, costFactor: 1.0 };
+                case 'shared':
+                    return { availability: 0.6, costFactor: 0.7 };
+                default:
+                    return { availability: 0.8, costFactor: 0.85 };
+            }
+        }
+
+        function generateRandomEvent() {
+            return possibleEvents[Math.floor(Math.random() * possibleEvents.length)];
+        }
+
+        function applyEventEffect(event) {
+            if (!event) return;
+
+            switch (event.effect) {
+                case 'effort_increase':
+                    const inProgressForIncrease = state.initiatives.filter(i => i.status === 'in-progress');
+                    if (inProgressForIncrease.length > 0) {
+                        const targetInitiative = inProgressForIncrease[Math.floor(Math.random() * inProgressForIncrease.length)];
+                        targetInitiative.effortWeeks = Math.round(targetInitiative.effortWeeks * 1.4);
+                        targetInitiative.hasIssues = true;
+                    }
+                    break;
+                    
+                case 'productivity_reduce':
+                    state.monthlyVariability = 0.6;
+                    break;
+                    
+                case 'new_initiative':
+                    const newInitiative = {
+                        id: Date.now(),
+                        name: 'Iniciativa Crítica Urgente',
+                        businessValue: 140,
+                        effortWeeks: 8,
+                        originalEffort: 8,
+                        strategicAlignment: 'Crítico',
+                        complexity: 'Alta',
+                        teamType: 'dedicated',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 1,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    };
+                    state.initiatives.unshift(newInitiative);
+                    state.initiatives.forEach((item, idx) => {
+                        item.priority = idx + 1;
+                    });
+                    break;
+                    
+                case 'productivity_boost':
+                    state.monthlyVariability = 1.25;
+                    break;
+            }
+        }
+
+        function calculateTeamImpact() {
+            let newBurnout = state.teamHealth.burnoutLevel;
+            let newSatisfaction = state.teamHealth.satisfaction;
+            let newProductivity = state.teamHealth.productivity;
+            let newTurnover = state.teamHealth.turnover;
+
+            // IMPACTO DE HORAS EXTRA
+            if (state.hoursPerPersonPerWeek > 45) {
+                const overloadFactor = (state.hoursPerPersonPerWeek - 40) / 40;
+                newBurnout = Math.min(100, newBurnout + overloadFactor * 35);
+                newSatisfaction = Math.max(0, newSatisfaction - overloadFactor * 30);
+                newProductivity = Math.max(50, newProductivity - overloadFactor * 25);
+            } else if (state.hoursPerPersonPerWeek > 40) {
+                const overloadFactor = (state.hoursPerPersonPerWeek - 40) / 40;
+                newBurnout = Math.min(100, newBurnout + overloadFactor * 20);
+                newSatisfaction = Math.max(0, newSatisfaction - overloadFactor * 15);
+                newProductivity = Math.max(70, newProductivity - overloadFactor * 10);
+            }
+
+            // CONSECUENCIAS DEL WIP ALTO
+            if (state.wipLimit > state.teamSize * 1.5) {
+                const thrashingFactor = (state.wipLimit - state.teamSize) / state.teamSize;
+                newProductivity = Math.max(25, newProductivity - thrashingFactor * 50);
+                newBurnout = Math.min(100, newBurnout + thrashingFactor * 40);
+                newSatisfaction = Math.max(0, newSatisfaction - thrashingFactor * 35);
+            } else if (state.wipLimit > state.teamSize) {
+                const thrashingFactor = (state.wipLimit - state.teamSize) / state.teamSize;
+                newProductivity = Math.max(40, newProductivity - thrashingFactor * 35);
+                newBurnout = Math.min(100, newBurnout + thrashingFactor * 25);
+                newSatisfaction = Math.max(0, newSatisfaction - thrashingFactor * 20);
+            }
+
+            // BURNOUT CAUSA ROTACIÓN
+            if (newBurnout > 80) {
+                newTurnover = Math.min(100, newTurnover + (newBurnout - 80) * 3);
+            } else if (newBurnout > 60) {
+                newTurnover = Math.min(100, newTurnover + (newBurnout - 60) * 1.5);
+            } else if (newBurnout > 40) {
+                newTurnover = Math.min(100, newTurnover + (newBurnout - 40) * 0.5);
+            }
+
+            // SATISFACCIÓN BAJA TAMBIÉN CAUSA ROTACIÓN
+            if (newSatisfaction < 30) {
+                newTurnover = Math.min(100, newTurnover + (30 - newSatisfaction) * 1.2);
+            } else if (newSatisfaction < 50) {
+                newTurnover = Math.min(100, newTurnover + (50 - newSatisfaction) * 0.8);
+            }
+
+            // RECUPERACIÓN GRADUAL
+            if (state.hoursPerPersonPerWeek <= 40 && state.wipLimit <= state.teamSize && newBurnout < 60) {
+                newBurnout = Math.max(0, newBurnout - 8);
+                newSatisfaction = Math.min(100, newSatisfaction + 5);
+                newProductivity = Math.min(100, newProductivity + 4);
+                newTurnover = Math.max(0, newTurnover - 3);
+            }
+
+            state.teamHealth = {
+                burnoutLevel: Math.round(newBurnout),
+                satisfaction: Math.round(newSatisfaction),
+                turnover: Math.round(newTurnover),
+                productivity: Math.round(newProductivity)
+            };
+        }
+
+        function simulateMonth() {
+            const warnings = [];
+            let valueDelivered = 0;
+            let projectsCompleted = 0;
+            
+            // Generar evento aleatorio
+            const event = generateRandomEvent();
+            
+            state.currentEvent = event;
+            applyEventEffect(event);
+            
+            // Calcular capacidad básica
+            const baseProductivity = state.teamHealth.productivity / 100;
+            const eventVariability = state.monthlyVariability;
+            const totalMonthlyHours = state.teamSize * state.hoursPerPersonPerWeek * 4;
+            
+            // Procesar iniciativas
+            const inProgress = state.initiatives.filter(i => i.status === 'in-progress');
+            const backlog = state.initiatives.filter(i => i.status === 'backlog')
+                .sort((a, b) => a.priority - b.priority);
+            
+            // Añadir nuevas iniciativas al WIP basado en prioridad
+            while (inProgress.length < state.wipLimit && backlog.length > 0) {
+                const next = backlog.shift();
+                next.status = 'in-progress';
+                inProgress.push(next);
+            }
+            
+            // Calcular penalizaciones
+            const multiProjectPenalty = calculateMultiProjectPenalty(inProgress.length);
+            
+            // Calcular horas efectivas
+            let effectiveHours = totalMonthlyHours * baseProductivity * eventVariability * multiProjectPenalty;
+            
+            // Penalización por WIP alto
+            if (state.wipLimit > state.teamSize) {
+                effectiveHours = effectiveHours * 0.55;
+                warnings.push(`⚠️ WIP alto (${state.wipLimit}) reduce eficiencia drásticamente`);
+            }
+            
+            // Procesar cada iniciativa
+            inProgress.forEach(initiative => {
+                const teamFactor = getInitiativeTeamFactor(initiative.teamType);
+                const hoursForThisInitiative = (effectiveHours * teamFactor.availability) / Math.max(1, inProgress.length);
+                
+                let totalHoursNeeded = initiative.effortWeeks * 40;
+                if (initiative.complexity === 'Alta') {
+                    totalHoursNeeded = totalHoursNeeded * 1.3;
+                }
+                
+                let progressIncrement = (hoursForThisInitiative / totalHoursNeeded) * 100;
+                progressIncrement = progressIncrement * (0.8 + Math.random() * 0.4);
+                
+                initiative.progress = Math.min(100, initiative.progress + progressIncrement);
+                
+                if (initiative.progress >= 100) {
+                    initiative.status = 'done';
+                    valueDelivered += initiative.businessValue;
+                    projectsCompleted++;
+                }
+            });
+            
+            // Generar advertencias
+            const costs = calculateCosts();
+            
+            warnings.unshift(`${event.icon} EVENTO: ${event.description}`);
+            
+            if (state.hoursPerPersonPerWeek > 50) {
+                warnings.push(`🚨 SOSTENIBILIDAD: ${state.hoursPerPersonPerWeek}h/semana es insostenible`);
+            }
+            
+            if (costs.totalCost > monthlyBudget * 0.9) {
+                warnings.push(`💰 GESTIÓN FINANCIERA: Usando ${Math.round(costs.totalCost/monthlyBudget*100)}% del presupuesto`);
+            }
+            
+            state.totalValueDelivered += valueDelivered;
+            state.monthlyVariability = 1;
+            
+            const finalEfficiency = Math.round((effectiveHours / totalMonthlyHours) * 100);
+            
+            return {
+                valueDelivered,
+                projectsCompleted,
+                teamEfficiency: finalEfficiency,
+                budgetUsed: costs.totalCost,
+                warnings,
+                event
+            };
+        }
+
+        // Funciones de eventos
+        function movePriority(id, direction) {
+            const targetIndex = state.initiatives.findIndex(i => i.id === id);
+            const targetInitiative = state.initiatives[targetIndex];
+            
+            if (targetInitiative.status !== 'backlog') {
+                return;
+            }
+            
+            const newIndex = direction === 'up' ? targetIndex - 1 : targetIndex + 1;
+            
+            if (newIndex >= 0 && newIndex < state.initiatives.length) {
+                const destinationInitiative = state.initiatives[newIndex];
+                
+                if (destinationInitiative.status === 'backlog') {
+                    [state.initiatives[targetIndex], state.initiatives[newIndex]] = 
+                    [state.initiatives[newIndex], state.initiatives[targetIndex]];
+                    
+                    state.initiatives.forEach((item, idx) => {
+                        item.priority = idx + 1;
+                    });
+                }
+            }
+        }
+
+        function changeInitiativeTeamType(id, newTeamType) {
+            const initiative = state.initiatives.find(i => i.id === id);
+            
+            if (initiative && initiative.status === 'backlog') {
+                initiative.teamType = newTeamType;
+            }
+        }
+
+        function executeMonth() {
+            const costs = calculateCosts();
+            
+            if (costs.totalCost > monthlyBudget) {
+                alert(`¡PRESUPUESTO INSUFICIENTE! Necesitas ${costs.totalCost.toLocaleString()}`);
+                return;
+            }
+
+            if (state.monthExecuted) {
+                alert('Ya ejecutaste este mes. Haz clic en "Siguiente Mes" para continuar.');
+                return;
+            }
+
+            state.isExecuting = true;
+            state.monthExecuted = true;
+            
+            calculateTeamImpact();
+            
+            render();
+            
+            setTimeout(() => {
+                const results = simulateMonth();
+                
+                state.monthlyResults = results;
+                state.monthlyHistory.push({
+                    month: state.currentMonth,
+                    ...results,
+                    teamHealth: { ...state.teamHealth },
+                    configuration: { 
+                        teamSize: state.teamSize, 
+                        hoursPerPersonPerWeek: state.hoursPerPersonPerWeek, 
+                        wipLimit: state.wipLimit 
+                    }
+                });
+                
+                state.previousTeamSize = state.teamSize;
+                state.isExecuting = false;
+                state.showResults = true;
+                
+                render();
+            }, 1000);
+        }
+
+        function nextMonth() {
+            state.currentMonth++;
+            state.showResults = false;
+            state.currentEvent = null;
+            state.monthExecuted = false;
+            
+            if (state.teamHealth.turnover > 30) {
+                const peopleLeaving = Math.floor(state.teamSize * state.teamHealth.turnover / 100 / 2);
+                if (peopleLeaving > 0) {
+                    const newTeamSize = Math.max(1, state.teamSize - peopleLeaving);
+                    state.teamSize = newTeamSize;
+                    
+                    state.teamHealth = {
+                        ...state.teamHealth,
+                        turnover: Math.max(0, state.teamHealth.turnover - 20),
+                        productivity: Math.max(60, state.teamHealth.productivity - 15),
+                        satisfaction: Math.max(40, state.teamHealth.satisfaction - 10)
+                    };
+                }
+            }
+            
+            render();
+        }
+
+        function resetSimulation() {
+            state = {
+                currentMonth: 1,
+                showResults: false,
+                showProfessionalSummary: false,
+                monthlyHistory: [],
+                totalValueDelivered: 0,
+                teamSize: 5,
+                hoursPerPersonPerWeek: 40,
+                wipLimit: 2,
+                previousTeamSize: 5,
+                currentEvent: null,
+                monthlyVariability: 1,
+                monthExecuted: false,
+                isExecuting: false,
+                showInstructions: true,
+                targetValue: 410,
+                targetMonths: 6,
+                teamHealth: {
+                    burnoutLevel: 0,
+                    satisfaction: 100,
+                    turnover: 0,
+                    productivity: 100
+                },
+                initiatives: [
+                    {
+                        id: 1,
+                        name: 'Plataforma E-commerce',
+                        businessValue: 120,
+                        effortWeeks: 14,
+                        originalEffort: 14,
+                        strategicAlignment: 'Crítico',
+                        complexity: 'Alta',
+                        teamType: 'dedicated',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 1,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    },
+                    {
+                        id: 2,
+                        name: 'App Mobile',
+                        businessValue: 90,
+                        effortWeeks: 10,
+                        originalEffort: 10,
+                        strategicAlignment: 'Alto',
+                        complexity: 'Baja',
+                        teamType: 'shared',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 2,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    },
+                    {
+                        id: 3,
+                        name: 'Sistema CRM',
+                        businessValue: 75,
+                        effortWeeks: 12,
+                        originalEffort: 12,
+                        strategicAlignment: 'Medio',
+                        complexity: 'Alta',
+                        teamType: 'shared',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 3,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    },
+                    {
+                        id: 4,
+                        name: 'Automatización QA',
+                        businessValue: 60,
+                        effortWeeks: 8,
+                        originalEffort: 8,
+                        strategicAlignment: 'Medio',
+                        complexity: 'Baja',
+                        teamType: 'dedicated',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 4,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    },
+                    {
+                        id: 5,
+                        name: 'Refactoring Backend',
+                        businessValue: 45,
+                        effortWeeks: 6,
+                        originalEffort: 6,
+                        strategicAlignment: 'Bajo',
+                        complexity: 'Baja',
+                        teamType: 'shared',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 5,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    },
+                    {
+                        id: 6,
+                        name: 'Analytics Dashboard',
+                        businessValue: 65,
+                        effortWeeks: 9,
+                        originalEffort: 9,
+                        strategicAlignment: 'Alto',
+                        complexity: 'Alta',
+                        teamType: 'dedicated',
+                        status: 'backlog',
+                        progress: 0,
+                        priority: 6,
+                        blockedWeeks: 0,
+                        hasIssues: false
+                    }
+                ],
+                monthlyResults: {
+                    valueDelivered: 0,
+                    projectsCompleted: 0,
+                    teamEfficiency: 0,
+                    budgetUsed: 0,
+                    warnings: [],
+                    event: null
+                }
+            };
+            
+            render();
+        }
+
+        // Funciones auxiliares
+        function getAlignmentColor(alignment) {
+            switch (alignment) {
+                case 'Crítico': return 'text-red-700 bg-red-100';
+                case 'Alto': return 'text-orange-700 bg-orange-100';
+                case 'Medio': return 'text-yellow-700 bg-yellow-100';
+                case 'Bajo': return 'text-green-700 bg-green-100';
+                default: return 'text-gray-700 bg-gray-100';
+            }
+        }
+
+        function getComplexityColor(complexity) {
+            switch (complexity) {
+                case 'Alta': return 'text-red-700 bg-red-100';
+                case 'Baja': return 'text-green-700 bg-green-100';
+                default: return 'text-gray-700 bg-gray-100';
+            }
+        }
+
+        function getTeamTypeColor(teamType) {
+            switch (teamType) {
+                case 'dedicated': return 'text-blue-700 bg-blue-100';
+                case 'shared': return 'text-orange-700 bg-orange-100';
+                default: return 'text-gray-700 bg-gray-100';
+            }
+        }
+
+        function getTeamTypeLabel(teamType) {
+            switch (teamType) {
+                case 'dedicated': return 'Dedicado';
+                case 'shared': return 'Compartido';
+                default: return 'Dedicado';
+            }
+        }
+
+        function getHealthColor(value, reverse = false) {
+            if (reverse) {
+                if (value >= 70) return 'text-red-600';
+                if (value >= 40) return 'text-yellow-600';
+                return 'text-green-600';
+            } else {
+                if (value >= 80) return 'text-green-600';
+                if (value >= 60) return 'text-yellow-600';
+                return 'text-red-600';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'backlog': return 'bg-gray-100 border-gray-300';
+                case 'in-progress': return 'bg-blue-100 border-blue-300';
+                case 'done': return 'bg-green-100 border-green-300';
+                default: return 'bg-gray-100';
+            }
+        }
+
+        function getObjectiveStatus() {
+            const progressPercentage = Math.round((state.totalValueDelivered / state.targetValue) * 100);
+            
+            if (state.totalValueDelivered >= state.targetValue) {
+                return { status: 'success', message: '🎉 ¡OBJETIVO ALCANZADO!', color: 'text-green-600' };
+            } else if (state.currentMonth > state.targetMonths) {
+                return { status: 'failed', message: '❌ OBJETIVO NO ALCANZADO', color: 'text-red-600' };
+            } else {
+                return { status: 'inprogress', message: `🎯 ${progressPercentage}% del objetivo completado`, color: 'text-amber-600' };
+            }
+        }
+
+        // Función principal de render
+        function render() {
+            const costs = calculateCosts();
+            const objectiveStatus = getObjectiveStatus();
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <!-- Header -->
+                <div class="mb-8 text-center">
+                    <div class="mb-4">
+                        <div class="text-4xl font-black text-amber-500 mb-2" style="letter-spacing: 0.1em;">
+                            AGILITY CHANGES
+                        </div>
+                        <div class="text-sm text-amber-600 font-medium">Simulador de Portafolio Lean</div>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                        Simulador Lean Portfolio Management - Versión Educativa
+                    </h1>
+                    <p class="text-gray-600 max-w-3xl mx-auto mb-4">
+                        Gestiona un portafolio de iniciativas bajo presión, eventos impredecibles y restricciones reales. 
+                        Aprende principios Lean mientras optimizas valor, costo y sostenibilidad del equipo.
+                    </p>
+                    
+                    <!-- Objetivo del Juego -->
+                    <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-6 max-w-4xl mx-auto">
+                        <div class="flex items-center justify-center mb-4">
+                            <span class="text-amber-600 mr-2">🏆</span>
+                            <h2 class="text-xl font-bold text-amber-900">OBJETIVO DEL DESAFÍO</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <div class="bg-white rounded-lg p-4 border border-amber-100">
+                                <div class="text-2xl font-bold text-amber-600">${state.targetValue}</div>
+                                <div class="text-sm text-gray-600">Valor de Negocio</div>
+                                <div class="text-xs text-gray-500">Meta a alcanzar (90% del portafolio)</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-amber-100">
+                                <div class="text-2xl font-bold text-amber-600">${state.targetMonths}</div>
+                                <div class="text-sm text-gray-600">Meses</div>
+                                <div class="text-xs text-gray-500">Tiempo límite para completar</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-amber-100">
+                                <div class="text-2xl font-bold text-amber-600">$${monthlyBudget.toLocaleString()}</div>
+                                <div class="text-sm text-gray-600">Presupuesto</div>
+                                <div class="text-xs text-gray-500">Límite mensual estricto</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <div class="text-lg font-medium ${objectiveStatus.color}">
+                                ${objectiveStatus.message}
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                Progreso: ${state.totalValueDelivered}/${state.targetValue} | Mes: ${state.currentMonth}/${state.targetMonths}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instrucciones -->
+                ${state.showInstructions ? `
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <span class="text-yellow-600 mr-2">ℹ️</span>
+                            <h3 class="font-bold text-yellow-900">INSTRUCCIONES PASO A PASO</h3>
+                        </div>
+                        <button onclick="toggleInstructions()" class="text-yellow-600 hover:text-yellow-800 text-xl">
+                            ✕
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg border border-yellow-200 mb-4">
+                        <h4 class="font-bold text-yellow-900 mb-3">🎯 CÓMO USAR EL SIMULADOR:</h4>
+                        <div class="space-y-4 text-sm text-yellow-800">
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong>PASO 1: CONFIGURAR TU EQUIPO</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• Ajusta el tamaño del equipo, horas por semana y límite de WIP</li>
+                                    <li>• Observa las alertas de burnout y WIP alto</li>
+                                </ul>
+                            </div>
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong>PASO 2: PRIORIZAR INICIATIVAS</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• Usa las flechas ↑↓ para reordenar por valor estratégico</li>
+                                    <li>• Cambia el tipo de equipo (Dedicado vs Compartido)</li>
+                                </ul>
+                            </div>
+                            <div class="p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <strong>PASO 3: EJECUTAR Y CONTINUAR</strong>
+                                <ul class="mt-2 ml-4 space-y-1">
+                                    <li>• Haz clic en "EJECUTAR MES" y revisa resultados</li>
+                                    <li>• Continúa al siguiente mes y ajusta estrategia</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Mes Actual -->
+                <div class="bg-white rounded-lg shadow-md p-4 mb-6 text-center border-2 border-amber-200">
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="text-amber-600">📅</span>
+                        <span class="text-2xl font-bold text-amber-800">MES ${state.currentMonth}</span>
+                    </div>
+                </div>
+
+                <!-- Panel de Presupuesto -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="text-green-600 mr-2">💰</span>
+                        <h2 class="text-xl font-semibold text-gray-900">Control de Presupuesto Mensual</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Salarios Base</div>
+                            <div class="text-xl font-bold text-blue-600">$${costs.baseCost.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Horas Extra</div>
+                            <div class="text-xl font-bold text-orange-600">$${costs.overtimeCost.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Contrataciones</div>
+                            <div class="text-xl font-bold text-purple-600">$${costs.hiringCost.toLocaleString()}</div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Total Mensual</div>
+                            <div class="text-xl font-bold ${costs.totalCost > monthlyBudget ? 'text-red-600' : 'text-green-600'}">
+                                $${costs.totalCost.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="h-4 rounded-full transition-all duration-300 ${
+                            costs.totalCost > monthlyBudget ? 'bg-red-500' : 
+                            costs.totalCost > monthlyBudget * 0.8 ? 'bg-amber-500' : 'bg-green-500'
+                        }" style="width: ${Math.min(100, (costs.totalCost / monthlyBudget) * 100)}%"></div>
+                    </div>
+                </div>
+
+                <!-- Configuración -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="text-gray-600 mr-2">⚙️</span>
+                        <h2 class="text-xl font-semibold text-gray-900">Configuración del Equipo</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Tamaño del Equipo: ${state.teamSize} personas
+                            </label>
+                            <input type="range" min="1" max="12" value="${state.teamSize}" 
+                                   onchange="updateTeamSize(this.value)" class="w-full" ${state.isExecuting ? 'disabled' : ''}>
+                            <div class="text-xs text-gray-500">
+                                Más personas = mayor capacidad pero mayor costo
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Horas por semana: ${state.hoursPerPersonPerWeek}h
+                            </label>
+                            <input type="range" min="30" max="60" value="${state.hoursPerPersonPerWeek}" 
+                                   onchange="updateHours(this.value)" class="w-full" ${state.isExecuting ? 'disabled' : ''}>
+                            <div class="text-xs text-gray-500">
+                                ${state.hoursPerPersonPerWeek > 50 ? '🚨 Riesgo crítico de burnout' : 
+                                  state.hoursPerPersonPerWeek > 40 ? '⚠️ Riesgo de burnout y rotación' : 
+                                  '✅ Horario sostenible'}
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Límite de WIP: ${state.wipLimit} iniciativas
+                            </label>
+                            <input type="range" min="1" max="10" value="${state.wipLimit}" 
+                                   onchange="updateWIP(this.value)" class="w-full" ${state.isExecuting ? 'disabled' : ''}>
+                            <div class="text-xs text-gray-500">
+                                ${state.wipLimit > state.teamSize ? '⚠️ WIP alto puede reducir eficiencia' : 
+                                  '✅ WIP balanceado con el tamaño del equipo'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado del Equipo -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="text-gray-600 mr-2">👥</span>
+                        <h2 class="text-xl font-semibold text-gray-900">Estado de Salud del Equipo</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-gray-50 rounded-lg border-2">
+                            <div class="text-3xl font-bold ${getHealthColor(state.teamHealth.burnoutLevel, true)}">
+                                ${state.teamHealth.burnoutLevel}%
+                            </div>
+                            <div class="text-sm text-gray-600 font-medium">Burnout</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg border-2">
+                            <div class="text-3xl font-bold ${getHealthColor(state.teamHealth.satisfaction)}">
+                                ${state.teamHealth.satisfaction}%
+                            </div>
+                            <div class="text-sm text-gray-600 font-medium">Satisfacción</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg border-2">
+                            <div class="text-3xl font-bold ${getHealthColor(state.teamHealth.turnover, true)}">
+                                ${state.teamHealth.turnover}%
+                            </div>
+                            <div class="text-sm text-gray-600 font-medium">Rotación</div>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg border-2">
+                            <div class="text-3xl font-bold ${getHealthColor(state.teamHealth.productivity)}">
+                                ${state.teamHealth.productivity}%
+                            </div>
+                            <div class="text-sm text-gray-600 font-medium">Productividad</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priorización de Iniciativas -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="text-gray-600 mr-2">🎯</span>
+                        <h2 class="text-xl font-semibold text-gray-900">Priorización de Iniciativas</h2>
+                    </div>
+
+                    <div class="space-y-3">
+                        ${state.initiatives.map((initiative, index) => `
+                            <div class="p-4 rounded-lg border-2 ${getStatusColor(initiative.status)}">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex flex-col items-center">
+                                            <button onclick="movePriority(${initiative.id}, 'up')" 
+                                                    ${index === 0 || state.isExecuting || initiative.status !== 'backlog' ? 'disabled' : ''}
+                                                    class="text-gray-500 hover:text-gray-700 disabled:opacity-50 p-1 text-lg">
+                                                ↑
+                                            </button>
+                                            <span class="font-bold text-xl bg-white rounded-full w-10 h-10 flex items-center justify-center border-2">
+                                                ${initiative.priority}
+                                            </span>
+                                            <button onclick="movePriority(${initiative.id}, 'down')" 
+                                                    ${index === state.initiatives.length - 1 || state.isExecuting || initiative.status !== 'backlog' ? 'disabled' : ''}
+                                                    class="text-gray-500 hover:text-gray-700 disabled:opacity-50 p-1 text-lg">
+                                                ↓
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <h3 class="font-medium text-lg">${initiative.name}</h3>
+                                                <span class="px-2 py-1 rounded text-xs font-medium ${getAlignmentColor(initiative.strategicAlignment)}">
+                                                    ${initiative.strategicAlignment}
+                                                </span>
+                                                <span class="px-2 py-1 rounded text-xs font-medium ${getComplexityColor(initiative.complexity)}">
+                                                    ${initiative.complexity}
+                                                </span>
+                                                ${initiative.hasIssues ? `
+                                                    <span class="px-2 py-1 rounded text-xs bg-red-100 text-red-700 font-medium">
+                                                        🐛 Afectada
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                                                <div>
+                                                    <span class="text-gray-600">Valor:</span>
+                                                    <span class="font-bold ml-2 text-green-600 text-lg">${initiative.businessValue}</span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-600">Esfuerzo:</span>
+                                                    <span class="font-bold ml-2 text-blue-600">
+                                                        ${initiative.effortWeeks} semanas
+                                                        ${initiative.complexity === 'Alta' ? '<span class="text-red-600 text-xs ml-1">(+30%)</span>' : ''}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-600">Progreso:</span>
+                                                    <span class="font-bold ml-2 text-lg">${Math.round(initiative.progress)}%</span>
+                                                </div>
+                                                <div>
+                                                    ${initiative.status === 'backlog' ? `
+                                                        <select onchange="changeInitiativeTeamType(${initiative.id}, this.value)" 
+                                                                ${state.isExecuting ? 'disabled' : ''} class="text-xs border rounded px-2 py-1">
+                                                            <option value="dedicated" ${initiative.teamType === 'dedicated' ? 'selected' : ''}>Dedicado</option>
+                                                            <option value="shared" ${initiative.teamType === 'shared' ? 'selected' : ''}>Compartido</option>
+                                                        </select>
+                                                    ` : `
+                                                        <span class="px-2 py-1 rounded text-xs font-medium ${getTeamTypeColor(initiative.teamType)}">
+                                                            ${getTeamTypeLabel(initiative.teamType)}
+                                                        </span>
+                                                    `}
+                                                </div>
+                                            </div>
+                                            
+                                            ${initiative.status === 'in-progress' ? `
+                                                <div class="mt-3 w-full bg-gray-200 rounded-full h-3">
+                                                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: ${initiative.progress}%"></div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Botón de Ejecución -->
+                <div class="text-center mb-6">
+                    <button onclick="executeMonth()" 
+                            ${state.isExecuting || costs.totalCost > monthlyBudget || state.monthExecuted ? 'disabled' : ''}
+                            class="px-12 py-4 rounded-lg font-bold text-white text-xl ${
+                                state.isExecuting || costs.totalCost > monthlyBudget || state.monthExecuted
+                                    ? 'bg-gray-400 cursor-not-allowed' 
+                                    : 'bg-amber-500 hover:bg-amber-600'
+                            } transition-colors shadow-lg">
+                        ${state.isExecuting ? `
+                            <div class="flex items-center">
+                                <div class="animate-spin mr-3 h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                                Ejecutando Mes ${state.currentMonth}...
+                            </div>
+                        ` : state.monthExecuted ? `
+                            ✅ MES EJECUTADO - Continúa al siguiente mes
+                        ` : costs.totalCost > monthlyBudget ? `
+                            ❌ PRESUPUESTO EXCEDIDO
+                        ` : `
+                            ▶️ EJECUTAR MES ${state.currentMonth}
+                        `}
+                    </button>
+                </div>
+
+                <!-- Resultados -->
+                ${state.showResults ? `
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="text-gray-600 mr-2">📊</span>
+                            <h2 class="text-xl font-semibold text-gray-900">RESULTADOS DEL MES ${state.currentMonth}</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="text-center p-4 bg-green-50 rounded-lg border-2">
+                                <div class="text-3xl font-bold text-green-600">${state.monthlyResults.valueDelivered}</div>
+                                <div class="text-sm text-gray-600 font-medium">Valor Entregado</div>
+                            </div>
+                            <div class="text-center p-4 bg-blue-50 rounded-lg border-2">
+                                <div class="text-3xl font-bold text-blue-600">${state.monthlyResults.projectsCompleted}</div>
+                                <div class="text-sm text-gray-600 font-medium">Completadas</div>
+                            </div>
+                            <div class="text-center p-4 bg-purple-50 rounded-lg border-2">
+                                <div class="text-3xl font-bold text-purple-600">${state.monthlyResults.teamEfficiency}%</div>
+                                <div class="text-sm text-gray-600 font-medium">Eficiencia</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 rounded-lg border-2">
+                                <div class="text-3xl font-bold text-gray-600">$${state.monthlyResults.budgetUsed?.toLocaleString()}</div>
+                                <div class="text-sm text-gray-600 font-medium">Presupuesto</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-center mb-3">
+                                <span class="text-red-600 mr-2">⚠️</span>
+                                <h3 class="font-bold text-red-800">EVENTOS Y ADVERTENCIAS DEL MES</h3>
+                            </div>
+                            <ul class="text-sm text-red-700 space-y-2">
+                                ${state.monthlyResults.warnings.map(warning => `
+                                    <li class="flex items-start">
+                                        <span class="mr-2">•</span>
+                                        <span>${warning}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="nextMonth()" 
+                                    ${state.currentMonth >= state.targetMonths && state.totalValueDelivered < state.targetValue ? 'disabled' : ''}
+                                    class="px-8 py-3 rounded-lg transition-colors font-medium text-lg ${
+                                        state.currentMonth >= state.targetMonths || state.totalValueDelivered >= state.targetValue
+                                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                                            : 'bg-amber-500 text-white hover:bg-amber-600'
+                                    }">
+                                ${state.currentMonth >= state.targetMonths || state.totalValueDelivered >= state.targetValue
+                                    ? 'SIMULACIÓN COMPLETADA'
+                                    : 'SIGUIENTE MES →'}
+                            </button>
+                            <button onclick="resetSimulation()" 
+                                    class="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
+                                NUEVA SIMULACIÓN
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Historial -->
+                ${state.monthlyHistory.length > 0 ? `
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div class="flex items-center mb-4">
+                            <span class="text-gray-600 mr-2">🕐</span>
+                            <h2 class="text-xl font-semibold text-gray-900">HISTORIAL</h2>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-medium">Mes</th>
+                                        <th class="px-4 py-3 text-left font-medium">Evento</th>
+                                        <th class="px-4 py-3 text-left font-medium">Valor</th>
+                                        <th class="px-4 py-3 text-left font-medium">Completadas</th>
+                                        <th class="px-4 py-3 text-left font-medium">Eficiencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${state.monthlyHistory.map(history => `
+                                        <tr class="border-t">
+                                            <td class="px-4 py-3 font-bold">${history.month}</td>
+                                            <td class="px-4 py-3">
+                                                <div class="flex items-center">
+                                                    <span class="mr-2">${history.event?.icon || ''}</span>
+                                                    <span class="text-xs">${history.event?.name || 'Sin evento'}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3 font-bold text-green-600">${history.valueDelivered}</td>
+                                            <td class="px-4 py-3 text-center">${history.projectsCompleted}</td>
+                                            <td class="px-4 py-3 text-center">${history.teamEfficiency}%</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Funciones de eventos para el HTML
+        function toggleInstructions() {
+            state.showInstructions = !state.showInstructions;
+            render();
+        }
+
+        function updateTeamSize(value) {
+            state.teamSize = parseInt(value);
+            render();
+        }
+
+        function updateHours(value) {
+            state.hoursPerPersonPerWeek = parseInt(value);
+            render();
+        }
+
+        function updateWIP(value) {
+            state.wipLimit = parseInt(value);
+            render();
+        }
+
+        // Hacer las funciones globales
+        window.toggleInstructions = toggleInstructions;
+        window.updateTeamSize = updateTeamSize;
+        window.updateHours = updateHours;
+        window.updateWIP = updateWIP;
+        window.movePriority = movePriority;
+        window.changeInitiativeTeamType = changeInitiativeTeamType;
+        window.executeMonth = executeMonth;
+        window.nextMonth = nextMonth;
+        window.resetSimulation = resetSimulation;
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            render();
+        });
+    </script>
+</body>
+</html>
